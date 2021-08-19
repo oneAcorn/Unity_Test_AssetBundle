@@ -1,3 +1,4 @@
+using com.acorn.utils;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,7 +55,8 @@ public class TestAB : MonoBehaviour
 
         btn4.onClick.AddListener(() =>
         {
-
+            string url = "https://ss0.baidu.com/94o3dSag_xI4khGko9WTAnF6hhy/zhidao/pic/item/8b13632762d0f70379f2e1750cfa513d2797c5d3.jpg";
+            StartCoroutine(ImgUtil.LoadImg(url, img));
         });
     }
 }
