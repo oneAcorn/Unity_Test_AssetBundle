@@ -14,7 +14,7 @@ using UnityEngine.UI;
 //==========================
 public class TestAB : MonoBehaviour
 {
-    public Button btn1, btn2, btn3, btn4;
+    public Button btn1, btn2, btn3, btn4, btn5;
     public Image img;
 
     string[] strs = new string[] {
@@ -34,17 +34,18 @@ public class TestAB : MonoBehaviour
     {
         btn1.onClick.AddListener(() =>
         {
-            img.sprite = QAssetBundleManager.LoadResource<Sprite>("UI_Pic1", "testpic");
+            img.sprite = ABUtils.Instance.LoadResource<Sprite>("UI_Pic1", "testpic", true);
         });
         btn2.onClick.AddListener(() =>
         {
-            img.sprite = QAssetBundleManager.LoadResource<Sprite>("UI_Pic2", "testpic");
+            img.sprite = ABUtils.Instance.LoadResource<Sprite>("UI_Pic2", "testpic", true);
         });
         btn3.onClick.AddListener(() =>
         {
             Permission.RequestUserPermissions(strs);
             StartCoroutine(QAssetBundleManager.DownloadAssetBundles("https://digital-hk.oss-cn-beijing.aliyuncs.com/android/test/", "AssetBundles", (path, name) =>
             {
+                print($"下载中{path},{name}");
                 StartCoroutine(QAssetBundleManager.DownloadAssetBundleAndSave(path, name, () =>
                 {
                     print($"下载完成 manifest:{name}");
@@ -57,6 +58,16 @@ public class TestAB : MonoBehaviour
         {
             string url = "https://ss0.baidu.com/94o3dSag_xI4khGko9WTAnF6hhy/zhidao/pic/item/8b13632762d0f70379f2e1750cfa513d2797c5d3.jpg";
             StartCoroutine(ImgUtil.LoadImg(url, img));
+        });
+
+        btn5.onClick.AddListener(() =>
+        {
+            string url = "https://digital-hk.oss-cn-beijing.aliyuncs.com/android/test2";
+            StartCoroutine(ABUtils.Instance.DownLoadAssetsWithDependencies2Local(url, "Android", "testpic", () =>
+            {
+                print("都完成了");
+            }));
+            //print("res:"+ABUtils.Instance.GetStreamingAssetsPath(false));
         });
     }
 }

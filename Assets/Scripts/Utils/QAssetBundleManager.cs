@@ -22,7 +22,7 @@ public class QAssetBundleManager
         if (!DicAssetBundle.TryGetValue(assetBundleGroupName, out assetbundle)) //从内存中获取失败
         {
             //从文件中获取
-            assetbundle = AssetBundle.LoadFromFile(Application.persistentDataPath+"/" + assetBundleGroupName);//+ ".assetbundle"
+            assetbundle = AssetBundle.LoadFromFile(GetStreamingAssetsPath() + assetBundleGroupName);//+ ".assetbundle"
             DicAssetBundle.Add(assetBundleGroupName, assetbundle); //放入内存
         }
         object obj = assetbundle.LoadAsset(assetBundleName, typeof(T));
@@ -64,13 +64,14 @@ public class QAssetBundleManager
 
             byte[] datas = www.downloadHandler.data;
             SaveAssetBundle(mainAssetBundleName, datas);
-            string localPath = Application.persistentDataPath +"/" + mainAssetBundleName;
+            string localPath = GetStreamingAssetsPath() + mainAssetBundleName;
             AssetBundle mainAssetBundle = AssetBundle.LoadFromFile(localPath);
             Debug.Log($"maniAsset:{mainAssetBundle}");
             if (mainAssetBundle == null)
                 yield return null;
             //获取AssetBundleManifest文件
             AssetBundleManifest manifest = mainAssetBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+
             Debug.Log($"manifest:{manifest}");
             if (getAssetsCallback != null)
             {
@@ -78,7 +79,7 @@ public class QAssetBundleManager
                 string[] assets = manifest.GetAllAssetBundles();
                 for (int i = 0; i < assets.Length; i++)
                 {
-                    Debug.Log(assetBundlePath + assets[i]);
+                    Debug.Log($"路径{assetBundlePath} , {assets[i]}");
                     ////开启协程下载所有的
                     //StartCoroutine(DownloadAssetBundleAndSave(assetBundlePath, assets[i], () =>
                     //{
@@ -94,6 +95,7 @@ public class QAssetBundleManager
     public static IEnumerator DownloadAssetBundleAndSave(string url, string name, Action saveLocalComplate = null)
     {
         WWW www = new WWW(url + name);
+        Debug.Log($"下载进度:{www.progress}");
         yield return www;
         if (www.isDone)
         {
@@ -103,13 +105,13 @@ public class QAssetBundleManager
 
     public static void SaveAssetBundle(string fileName, byte[] bytes, Action saveLocalComplate = null)
     {
-        string dirPath = Application.persistentDataPath;
-            Debug.Log($"dir path:{dirPath}");
+        string dirPath = GetStreamingAssetsPath();
+        Debug.Log($"dir path:{dirPath}");
         if (!Directory.Exists(dirPath))
         {
             Directory.CreateDirectory(dirPath);
         }
-        string path = dirPath + "/" + fileName;
+        string path = dirPath + fileName;
         FileInfo fileInfo = new FileInfo(path);
         FileStream fs = fileInfo.Create();
 
@@ -124,13 +126,45 @@ public class QAssetBundleManager
         }
     }
 
+    public static IEnumerator DownloadOrFile(string url)
+    {
+        WWW www = WWW.LoadFromCacheOrDownload(url, 1);
+        Debug.Log($"下载进度:{www.progress}");
+        yield return www;
+        if (www.error != null)
+        {
+            Debug.Log(www.error);
+        }
+        AssetBundle ab = www.assetBundle;
+        Debug.Log($"all File:{ab.GetAllAssetNames()}");
+        foreach (var name in ab.GetAllAssetNames())
+        {
+            Debug.Log("asset name:" + name);
+        }
+        //获取AssetBundleManifest文件
+        AssetBundleManifest manifest = ab.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+        Debug.Log($"manifest:{manifest}");
+        string[] aa = manifest.GetAllDependencies("model");
+        foreach (var dependence in aa)
+        {
+            Debug.Log($"依赖:{dependence}");
+        }
+        //获取AssetBundleManifest中的所有AssetBundle的名称信息
+        string[] assets = manifest.GetAllAssetBundles();
+        for (int i = 0; i < assets.Length; i++)
+        {
+            Debug.Log($"路径:{assets[i]}");
+        }
+    }
+
     public static string GetStreamingAssetsPath()
     {
+        //android 路径 "jar:file://" + Application.dataPath + "!/assets";
         string StreamingAssetsPath =
 #if UNITY_EDITOR
         Application.streamingAssetsPath + "/";
 #elif UNITY_ANDROID
-        "jar:file://" + Application.dataPath + "!/assets";
+        Application.persistentDataPath + "/AssetBundle/";
 #elif UNITY_IPHONE
         Application.dataPath + "/Raw/";
 #else
