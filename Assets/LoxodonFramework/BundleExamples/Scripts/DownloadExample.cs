@@ -102,7 +102,6 @@ namespace Loxodon.Framework.Examples.Bundle
                 }
 
                 BundleManifest manifest = manifestResult.Result;
-
                 IProgressResult<float, List<BundleInfo>> bundlesResult = this.downloader.GetDownloadList(manifest);
                 yield return bundlesResult.WaitForDone();
 
@@ -172,6 +171,7 @@ namespace Loxodon.Framework.Examples.Bundle
 
             /* Create a BundleResources */
             this.resources = new BundleResources(pathInfoParser, manager);
+            Debug.Log($"GetResources path1:{BundleUtil.GetStorableDirectory()},path2:{BundleUtil.GetReadOnlyDirectory()}");
             return this.resources;
         }
 
